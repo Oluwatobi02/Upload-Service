@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    Hello this is the content
+    <input type="file" name="file" id="file" />
+    <button id="btnUpload">Read & Upload</button>
+    <div id="divOutput"></div>
+
+    <script>
+        const btnUpload = document.getElementById('btnUpload');
+        const divOutput = document.getElementById('divOutput');
+        const f = document.getElementById('file');
+
+
+        btnUpload.addEventListener("click", () => {
+            const fileReader = new FileReader();
+            const theFile = f.files[0];
+            fileReader.onload =async ev => {
+                const CHUNK_SIZE = 5000;
+                const chunkCount = ev.target.result.byteLength / CHUNK_SIZE;
+
+                console.log("Read successfully")
+                const fileName = Math.random() * 1000 + theFile.name;
+                for (let chunkId = 0; chunkId < chunkCount+1; chunkId ++ ) {
+                    const chunk = ev.target.result.slice(chunkId * CHUNK_SIZE, (chunkId +1) * CHUNK_SIZE);
+                    await fetch('http://localhost:8080/upload', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/octet-stream',
+                            "Content-Length": chunk.length,
+                            "file-name": fileName
+                        },
+                        body: chunk
+                    })
+                    divOutput.textContent = Math.round(chunkId * 100 / chunkCount, 0) + "%"
+                }
+               console.log(ev.target.result.byteLength)
+            }
+            fileReader.readAsArrayBuffer(theFile)
+
+        })
+    </script>
+</body>
+</html>
